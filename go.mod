@@ -1,4 +1,4 @@
-module github.com/atanda0x/aggr
+module github.com/atanda0x/chi-boilerplate-server
 
 go 1.21.1
 
