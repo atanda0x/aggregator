@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,8 +11,10 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
+// hold conn to db
 type apiConfig struct {
 	DB *database.Queries
 }
@@ -23,6 +26,27 @@ func main() {
 	postString := os.Getenv("PORT")
 	if postString == "" {
 		log.Fatal("port is not found in environment")
+	}
+
+	//
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatal("DB_URL is not found in environment")
+	}
+
+	//conn to db
+	conn, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal("Can't connect to db: ", err)
+	}
+
+	queries := database.New(conn)
+	if err != nil {
+		log.Fatal("Can't create to db connection", err)
+	}
+
+	apiCfg := apiConfig{
+		DB: queries,
 	}
 
 	router := chi.NewRouter()
