@@ -21,7 +21,7 @@ type apiConfig struct {
 
 func main() {
 
-	godotenv.Load(".env")
+	godotenv.Load()
 
 	postString := os.Getenv("PORT")
 	if postString == "" {
@@ -40,13 +40,8 @@ func main() {
 		log.Fatal("Can't connect to db: ", err)
 	}
 
-	queries := database.New(conn)
-	if err != nil {
-		log.Fatal("Can't create to db connection", err)
-	}
-
 	apiCfg := apiConfig{
-		DB: queries,
+		DB: database.New(conn),
 	}
 
 	router := chi.NewRouter()
@@ -62,7 +57,7 @@ func main() {
 	v1Router := chi.NewRouter()
 	v1Router.Get("/healthz", handlerReadiness)
 	v1Router.Get("/err", handleError)
-	v1Router.Post("/users", apiCfg.handlerUser)
+	v1Router.Post("/users", apiCfg.handlerCreateUser)
 
 	router.Mount("/v1", v1Router)
 
