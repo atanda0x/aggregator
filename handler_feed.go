@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -38,4 +39,12 @@ func (cfg *apiConfig) handlerCreateFeed(w http.ResponseWriter, r *http.Request, 
 	}
 
 	respondWithJSON(w, http.StatusOK, databaseFeedToFeed(feed))
+}
+
+func (apiCfg *apiConfig) handlerGetFeeds(w http.ResponseWriter, r *http.Request) {
+	feeds, err := apiCfg.DB.GetFeeds(r.Context())
+	if err != nil {
+		respondWithError(w, 400, fmt.Sprintf("Couldn't get Feeds: %v", err))
+	}
+	respondWithJSON(w, 200, databaseFeedsToFeeds(feeds))
 }
