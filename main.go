@@ -1,10 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
@@ -16,5 +18,19 @@ func main() {
 		log.Fatal("PORT is not found")
 	}
 
-	fmt.Println("Port:", port)
+	router := gin.Default()
+
+	srv := &http.Server{
+		Handler:      router,
+		Addr:         ":" + port,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+
+	log.Printf("Server starting on port %v", port)
+	err := srv.ListenAndServe()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 }
