@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -19,6 +20,10 @@ func main() {
 	}
 
 	router := gin.Default()
+
+	router.Use(cors.Default())
+
+	router.GET("/healthz", HandlerReadiness)
 
 	srv := &http.Server{
 		Handler:      router,

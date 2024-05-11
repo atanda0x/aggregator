@@ -6,15 +6,14 @@ import (
 	"net/http"
 )
 
-// Respond the requet from client in JSON
-func ResWithJON(w http.ResponseWriter, code int, payload interface{}) {
+func ResWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	data, err := json.Marshal(payload)
 	if err != nil {
-		log.Printf("Failed to marshal JSON res: %v", payload)
+		log.Printf("failed to marshal json res: %v", payload)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.Header().Add("Content-Type", "appliction/json")
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(data)
 }
