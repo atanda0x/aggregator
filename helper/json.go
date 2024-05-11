@@ -15,6 +15,6 @@ func resWithJON(w http.ResponseWriter, code int, payload interface{}) {
 		return
 	}
 	w.Header().Add("Content-Type", "appliction/json")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(code)
 	w.Write(data)
 }
