@@ -6,11 +6,19 @@ import (
 	"os"
 	"time"
 
+	"github.com/atanda0x/aggregator/helper"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
+func handlerReadiness(c *gin.Context) {
+	helper.ResWithJSON(c.Writer, http.StatusOK, struct{}{})
+}
+
+func handlerErr(c *gin.Context) {
+	helper.ResWithError(c.Writer, http.StatusOK, "Something went wrong!!!!")
+}
 func main() {
 	godotenv.Load(".env")
 
@@ -23,7 +31,8 @@ func main() {
 
 	router.Use(cors.Default())
 
-	router.GET("/healthz", HandlerReadiness)
+	router.GET("/healthz", handlerReadiness)
+	router.GET("/err", handlerErr)
 
 	srv := &http.Server{
 		Handler:      router,
