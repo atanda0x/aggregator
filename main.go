@@ -80,6 +80,36 @@ func (apicfg *apiConfig) handlerGetUser(c *gin.Context, user sqlc.User) {
 	helper.ResWithJSON(c.Writer, http.StatusOK, user)
 }
 
+func (apiCfg *apiConfig) handlerCreateFeed(c *gin.Context, user sqlc.User) {
+	type param struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	}
+	decoder := json.NewDecoder(c.Request.Body)
+
+	params := param{}
+	err := decoder.Decode(&params)
+	if err != nil {
+		helper.ResWithError(c.Writer, http.StatusForbidden, fmt.Sprintf("Error parsing JSON: %v", err))
+		return
+	}
+
+	feed, err := apiCfg.DB.CreateFeed(c.Request.Context(), sqlc.CreateFeedParams{
+		ID:        uuid.New(),
+		Name:      params.Name,
+		Url:       params.URL,
+		UserID:    user.ID,
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+	})
+	if err != nil {
+		helper.ResWithError(c.Writer, http.StatusForbidden, fmt.Sprintf("Couldn't create feed: %v", err))
+		return
+	}
+
+	helper.ResWithJSON(c.Writer, http.StatusCreated, feed)
+}
+
 func main() {
 	godotenv.Load(".env")
 
@@ -110,6 +140,7 @@ func main() {
 	router.GET("/err", handler.HandlerErr)
 	router.POST("/users", apiCfg.CreateUserHandle)
 	router.GET("/users", apiCfg.middleWare(apiCfg.handlerGetUser))
+	router.POST("/feeds", apiCfg.middleWare(apiCfg.handlerCreateFeed))
 
 	srv := &http.Server{
 		Handler:      router,
