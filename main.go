@@ -25,6 +25,28 @@ type apiConfig struct {
 	DB *sqlc.Queries
 }
 
+type authHandler func(c *gin.Context, user sqlc.User)
+
+func (apiCfg *apiConfig) middleWare(handler authHandler) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		apiKey, err := auth.GetApiKey(c.Request.Header)
+		if err != nil {
+			helper.ResWithError(c.Writer, http.StatusForbidden, fmt.Sprintf("Auth error: %v", err))
+			c.Abort()
+			return
+		}
+
+		user, err := apiCfg.DB.GetUserByAPIKey(c.Request.Context(), apiKey)
+		if err != nil {
+			helper.ResWithError(c.Writer, http.StatusBadRequest, fmt.Sprintf("Couldn't get user: %v", err))
+			c.Abort()
+			return
+		}
+
+		handler(c, user)
+	}
+}
+
 func (apiCfg *apiConfig) CreateUserHandle(c *gin.Context) {
 	type params struct {
 		Name  string `json:"name"`
@@ -54,21 +76,8 @@ func (apiCfg *apiConfig) CreateUserHandle(c *gin.Context) {
 	helper.ResWithJSON(c.Writer, http.StatusOK, user)
 }
 
-func (apicfg *apiConfig) handlerGetUser(c *gin.Context) {
-	apiKey, err := auth.GetApiKey(c.Request.Header)
-	if err != nil {
-		helper.ResWithError(c.Writer, http.StatusForbidden, fmt.Sprintf("Auth erro: %v", err))
-		return
-	}
-
-	user, err := apicfg.DB.GetUserByAPIKey(c.Request.Context(), apiKey)
-	if err != nil {
-		helper.ResWithError(c.Writer, http.StatusBadRequest, fmt.Sprintf("Couldn't get user: %v", err))
-		return
-	}
-
+func (apicfg *apiConfig) handlerGetUser(c *gin.Context, user sqlc.User) {
 	helper.ResWithJSON(c.Writer, http.StatusOK, user)
-
 }
 
 func main() {
@@ -100,7 +109,7 @@ func main() {
 	router.GET("/healthz", handler.HandlerReadiness)
 	router.GET("/err", handler.HandlerErr)
 	router.POST("/users", apiCfg.CreateUserHandle)
-	router.GET("/users", apiCfg.handlerGetUser)
+	router.GET("/users", apiCfg.middleWare(apiCfg.handlerGetUser))
 
 	srv := &http.Server{
 		Handler:      router,

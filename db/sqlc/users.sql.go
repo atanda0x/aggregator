@@ -13,7 +13,7 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (id, name, email, api_key, created_at, updated_at)
+INSERT INTO users (id, name, email, created_at, updated_at, api_key)
 VALUES ($1, $2, $3, $4, $5, 
     encode(sha256(random()::text::bytea), 'hex')
 )
@@ -24,8 +24,8 @@ type CreateUserParams struct {
 	ID        uuid.UUID `json:"id"`
 	Name      string    `json:"name"`
 	Email     string    `json:"email"`
-	ApiKey    string    `json:"api_key"`
 	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -33,8 +33,8 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.ID,
 		arg.Name,
 		arg.Email,
-		arg.ApiKey,
 		arg.CreatedAt,
+		arg.UpdatedAt,
 	)
 	var i User
 	err := row.Scan(
