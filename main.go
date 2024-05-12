@@ -2,22 +2,55 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/atanda0x/aggregator/handler"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 
 	"github.com/atanda0x/aggregator/db/sqlc"
+	"github.com/atanda0x/aggregator/handler"
+	"github.com/atanda0x/aggregator/helper"
 )
 
 type apiConfig struct {
 	DB *sqlc.Queries
+}
+
+func (apiCfg *apiConfig) CreateUserHandle(c *gin.Context) {
+	type params struct {
+		Name  string `json:"name"`
+		Email string `json:"email"`
+	}
+	decoder := json.NewDecoder(c.Request.Body)
+
+	param := params{}
+	err := decoder.Decode(&param)
+	if err != nil {
+		helper.ResWithError(c.Writer, http.StatusNotFound, fmt.Sprintf("Error parsing JSON: %v", err))
+		return
+	}
+
+	user, err := apiCfg.DB.CreateUser(c.Request.Context(), sqlc.CreateUserParams{
+		ID:        uuid.New(),
+		Name:      param.Name,
+		Email:     param.Email,
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+	})
+	if err != nil {
+		helper.ResWithError(c.Writer, http.StatusNotFound, fmt.Sprintf("Couldn't create user: %v", err))
+		return
+	}
+
+	helper.ResWithJSON(c.Writer, http.StatusOK, user)
 }
 
 func main() {
@@ -48,6 +81,7 @@ func main() {
 
 	router.GET("/healthz", handler.HandlerReadiness)
 	router.GET("/err", handler.HandlerErr)
+	router.POST("/user", apiCfg.CreateUserHandle)
 
 	srv := &http.Server{
 		Handler:      router,
