@@ -8,15 +8,16 @@ import (
 	"time"
 
 	"github.com/atanda0x/aggregator/handler"
-	"github.com/atanda0x/aggregator/internal/database"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+
+	"github.com/atanda0x/aggregator/db/sqlc"
 )
 
 type apiConfig struct {
-	DB *database.Queries
+	DB *sqlc.Queries
 }
 
 func main() {
@@ -38,7 +39,7 @@ func main() {
 	}
 
 	apiCfg := apiConfig{
-		DB: database.New(conn),
+		DB: sqlc.New(conn),
 	}
 
 	router := gin.Default()
@@ -56,7 +57,7 @@ func main() {
 	}
 
 	log.Printf("Server starting on port %v", port)
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
