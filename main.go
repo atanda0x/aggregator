@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/atanda0x/aggregator/handlers"
+	"github.com/atanda0x/aggregator/handler"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -24,8 +24,8 @@ func main() {
 
 	router.Use(cors.Default())
 
-	router.GET("/healthz", handlers.HandlerReadiness)
-	router.GET("/err", handlers.HandlerErr)
+	router.GET("/healthz", handler.HandlerReadiness)
+	router.GET("/err", handler.HandlerErr)
 
 	srv := &http.Server{
 		Handler:      router,
