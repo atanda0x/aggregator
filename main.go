@@ -15,6 +15,7 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 
+	"github.com/atanda0x/aggregator/auth"
 	"github.com/atanda0x/aggregator/db/sqlc"
 	"github.com/atanda0x/aggregator/handler"
 	"github.com/atanda0x/aggregator/helper"
@@ -34,7 +35,7 @@ func (apiCfg *apiConfig) CreateUserHandle(c *gin.Context) {
 	param := params{}
 	err := decoder.Decode(&param)
 	if err != nil {
-		helper.ResWithError(c.Writer, http.StatusNotFound, fmt.Sprintf("Error parsing JSON: %v", err))
+		helper.ResWithError(c.Writer, http.StatusForbidden, fmt.Sprintf("Error parsing JSON: %v", err))
 		return
 	}
 
@@ -46,11 +47,28 @@ func (apiCfg *apiConfig) CreateUserHandle(c *gin.Context) {
 		UpdatedAt: time.Now().UTC(),
 	})
 	if err != nil {
-		helper.ResWithError(c.Writer, http.StatusNotFound, fmt.Sprintf("Couldn't create user: %v", err))
+		helper.ResWithError(c.Writer, http.StatusBadRequest, fmt.Sprintf("Couldn't create user: %v", err))
 		return
 	}
 
 	helper.ResWithJSON(c.Writer, http.StatusOK, user)
+}
+
+func (apicfg *apiConfig) handlerGetUser(c *gin.Context) {
+	apiKey, err := auth.GetApiKey(c.Request.Header)
+	if err != nil {
+		helper.ResWithError(c.Writer, http.StatusForbidden, fmt.Sprintf("Auth erro: %v", err))
+		return
+	}
+
+	user, err := apicfg.DB.GetUserByAPIKey(c.Request.Context(), apiKey)
+	if err != nil {
+		helper.ResWithError(c.Writer, http.StatusBadRequest, fmt.Sprintf("Couldn't get user: %v", err))
+		return
+	}
+
+	helper.ResWithJSON(c.Writer, http.StatusOK, user)
+
 }
 
 func main() {
@@ -81,7 +99,8 @@ func main() {
 
 	router.GET("/healthz", handler.HandlerReadiness)
 	router.GET("/err", handler.HandlerErr)
-	router.POST("/user", apiCfg.CreateUserHandle)
+	router.POST("/users", apiCfg.CreateUserHandle)
+	router.GET("/users", apiCfg.handlerGetUser)
 
 	srv := &http.Server{
 		Handler:      router,
