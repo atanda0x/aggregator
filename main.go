@@ -110,6 +110,15 @@ func (apiCfg *apiConfig) handlerCreateFeed(c *gin.Context, user sqlc.User) {
 	helper.ResWithJSON(c.Writer, http.StatusCreated, feed)
 }
 
+func (apiCfg *apiConfig) handlerGetFeeds(c *gin.Context) {
+	feeds, err := apiCfg.DB.GetFeeds(c.Request.Context())
+	if err != nil {
+		helper.ResWithError(c.Writer, http.StatusForbidden, fmt.Sprintf("Couldn't get feeds: %v", err))
+		return
+	}
+	helper.ResWithJSON(c.Writer, http.StatusCreated, feeds)
+}
+
 func main() {
 	godotenv.Load(".env")
 
@@ -140,7 +149,9 @@ func main() {
 	router.GET("/err", handler.HandlerErr)
 	router.POST("/users", apiCfg.CreateUserHandle)
 	router.GET("/users", apiCfg.middleWare(apiCfg.handlerGetUser))
+
 	router.POST("/feeds", apiCfg.middleWare(apiCfg.handlerCreateFeed))
+	router.GET("/feeds", apiCfg.handlerGetFeeds)
 
 	srv := &http.Server{
 		Handler:      router,
