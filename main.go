@@ -157,6 +157,27 @@ func (apiCfg *apiConfig) handlerGetFeedFollows(c *gin.Context, user sqlc.User) {
 	helper.ResWithJSON(c.Writer, http.StatusCreated, feed_follows)
 }
 
+func (apiCfg *apiConfig) handlerDeleteFeedFollow(c *gin.Context, user sqlc.User) {
+	feedFollowIDstr := c.Param("feedFollowID")
+	feedFollowID, err := uuid.Parse(feedFollowIDstr)
+	if err != nil {
+		helper.ResWithError(c.Writer, http.StatusBadRequest, fmt.Sprintf("Couldn't parse feed follow id: %v", err))
+		return
+	}
+
+	err = apiCfg.DB.DeleteFeedFollow(c.Request.Context(), sqlc.DeleteFeedFollowParams{
+		ID:     feedFollowID,
+		UserID: user.ID,
+	})
+
+	if err != nil {
+		helper.ResWithError(c.Writer, http.StatusInternalServerError, fmt.Sprintf("Couldn't delete feed follow: %v", err))
+		return
+	}
+
+	helper.ResWithJSON(c.Writer, http.StatusOK, struct{}{})
+}
+
 func main() {
 	godotenv.Load(".env")
 
@@ -193,6 +214,8 @@ func main() {
 
 	router.POST("/feed_follows", apiCfg.middleWare(apiCfg.handlerCreateFeedFollow))
 	router.GET("/feed_follows", apiCfg.middleWare(apiCfg.handlerGetFeedFollows))
+
+	router.DELETE("/feed_follows/:feedFollowID", apiCfg.middleWare(apiCfg.handlerDeleteFeedFollow))
 
 	srv := &http.Server{
 		Handler:      router,
