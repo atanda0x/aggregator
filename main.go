@@ -19,6 +19,7 @@ import (
 	"github.com/atanda0x/aggregator/db/sqlc"
 	"github.com/atanda0x/aggregator/handler"
 	"github.com/atanda0x/aggregator/helper"
+	"github.com/atanda0x/aggregator/rss"
 )
 
 type apiConfig struct {
@@ -179,6 +180,12 @@ func (apiCfg *apiConfig) handlerDeleteFeedFollow(c *gin.Context, user sqlc.User)
 }
 
 func main() {
+	feed, err := rss.UrlToFeed("https://wagslane.dev/index.xml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(feed)
+
 	godotenv.Load(".env")
 
 	port := os.Getenv("PORT")
