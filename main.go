@@ -119,20 +119,32 @@ func (apiCfg *apiConfig) handlerGetFeeds(c *gin.Context) {
 	helper.ResWithJSON(c.Writer, http.StatusCreated, feeds)
 }
 
-func (apiCfG *apiConfig) handlerCreateFeedFollow(c *gin.Context) {
+func (apiCfG *apiConfig) handlerCreateFeedFollow(c *gin.Context, user sqlc.User) {
 	type param struct {
-		FEEDID uuid.UUID `json:"feed_id"`
+		FeedID uuid.UUID `json:"feed_id"`
 	}
 	decoder := json.NewDecoder(c.Request.Body)
 
 	params := param{}
-	err := decoder.Decode(params)
+	err := decoder.Decode(&params)
 	if err != nil {
 		helper.ResWithError(c.Writer, http.StatusForbidden, fmt.Sprintf("Error parsing JSON: %v", err))
 		return
 	}
 
-	feed_follow, err := apiCfG.DB.CreateFeed(sqlc.CreateFeedParams{})
+	feed_follows, err := apiCfG.DB.CreateFeedFollow(c.Request.Context(), sqlc.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		UserID:    user.ID,
+		FeedID:    params.FeedID,
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+	})
+	if err != nil {
+		helper.ResWithError(c.Writer, http.StatusForbidden, fmt.Sprintf("Couggldn't create feed follow: %v", err))
+		return
+	}
+
+	helper.ResWithJSON(c.Writer, http.StatusCreated, feed_follows)
 }
 
 func main() {
@@ -168,6 +180,8 @@ func main() {
 
 	router.POST("/feeds", apiCfg.middleWare(apiCfg.handlerCreateFeed))
 	router.GET("/feeds", apiCfg.handlerGetFeeds)
+
+	router.POST("/feed_follows", apiCfg.middleWare(apiCfg.handlerCreateFeedFollow))
 
 	srv := &http.Server{
 		Handler:      router,
