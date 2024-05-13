@@ -203,9 +203,12 @@ func main() {
 		log.Fatal("Can't connect to db:", err)
 	}
 
+	db := sqlc.New(conn)
 	apiCfg := apiConfig{
-		DB: sqlc.New(conn),
+		DB: db,
 	}
+
+	go rss.StartScraping(db, 10, time.Minute)
 
 	router := gin.Default()
 
