@@ -11,3 +11,10 @@ SELECT * FROM feeds;
 SELECT * FROM feeds
 ORDER BY last_fetch_at ASC NULLS FIRST
 LIMIT 1;
+
+-- name: MarkFeedAsFetched :one
+UPDATE feeds
+SET last_fetch_at = NOW(), 
+updated_at = NOW()
+WHERE id = $1
+RETURNING *;
