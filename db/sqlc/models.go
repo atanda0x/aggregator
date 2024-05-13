@@ -5,18 +5,20 @@
 package sqlc
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 type Feed struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	Url       string    `json:"url"`
-	UserID    uuid.UUID `json:"user_id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID          uuid.UUID    `json:"id"`
+	Name        string       `json:"name"`
+	Url         string       `json:"url"`
+	UserID      uuid.UUID    `json:"user_id"`
+	CreatedAt   time.Time    `json:"created_at"`
+	UpdatedAt   time.Time    `json:"updated_at"`
+	LastFetchAt sql.NullTime `json:"last_fetch_at"`
 }
 
 type FeedFollow struct {
