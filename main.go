@@ -119,6 +119,22 @@ func (apiCfg *apiConfig) handlerGetFeeds(c *gin.Context) {
 	helper.ResWithJSON(c.Writer, http.StatusCreated, feeds)
 }
 
+func (apiCfG *apiConfig) handlerCreateFeedFollow(c *gin.Context) {
+	type param struct {
+		FEEDID uuid.UUID `json:"feed_id"`
+	}
+	decoder := json.NewDecoder(c.Request.Body)
+
+	params := param{}
+	err := decoder.Decode(params)
+	if err != nil {
+		helper.ResWithError(c.Writer, http.StatusForbidden, fmt.Sprintf("Error parsing JSON: %v", err))
+		return
+	}
+
+	feed_follow, err := apiCfG.DB.CreateFeed(sqlc.CreateFeedParams{})
+}
+
 func main() {
 	godotenv.Load(".env")
 

@@ -1,7 +1,6 @@
 -- +goose Up
-CREATE TABLE feed_follow (
+CREATE TABLE feed_follows (
     id UUID PRIMARY KEY,
-    name TEXT NOT NULL,
     feed_id UUID NOT NULL REFERENCES feeds(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE(user_id, feed_id),
@@ -11,4 +10,4 @@ CREATE TABLE feed_follow (
 
 
 -- +goose Down
-DROP TABLE feed_follow;
+DROP TABLE feed_follows;
