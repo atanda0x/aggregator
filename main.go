@@ -147,6 +147,16 @@ func (apiCfG *apiConfig) handlerCreateFeedFollow(c *gin.Context, user sqlc.User)
 	helper.ResWithJSON(c.Writer, http.StatusCreated, feed_follows)
 }
 
+func (apiCfg *apiConfig) handlerGetFeedFollows(c *gin.Context, user sqlc.User) {
+	feed_follows, err := apiCfg.DB.GetFeedFollows(c.Request.Context(), user.ID)
+	if err != nil {
+		helper.ResWithError(c.Writer, http.StatusForbidden, fmt.Sprintf("Couldn't get feed follows: %v", err))
+		return
+	}
+
+	helper.ResWithJSON(c.Writer, http.StatusCreated, feed_follows)
+}
+
 func main() {
 	godotenv.Load(".env")
 
@@ -182,6 +192,7 @@ func main() {
 	router.GET("/feeds", apiCfg.handlerGetFeeds)
 
 	router.POST("/feed_follows", apiCfg.middleWare(apiCfg.handlerCreateFeedFollow))
+	router.GET("/feed_follows", apiCfg.middleWare(apiCfg.handlerGetFeedFollows))
 
 	srv := &http.Server{
 		Handler:      router,
