@@ -179,6 +179,18 @@ func (apiCfg *apiConfig) handlerDeleteFeedFollow(c *gin.Context, user sqlc.User)
 	helper.ResWithJSON(c.Writer, http.StatusOK, struct{}{})
 }
 
+func (apiCfg *apiConfig) handlerGetPostsForUser(c *gin.Context, user sqlc.User) {
+	post, err := apiCfg.DB.GetPostsForUser(c.Request.Context(), sqlc.GetPostsForUserParams{
+		UserID: user.ID,
+		Limit:  10,
+	})
+	if err != nil {
+		helper.ResWithError(c.Writer, http.StatusForbidden, fmt.Sprintf("Couldn't get poosts: %v", err))
+		return
+	}
+	helper.ResWithJSON(c.Writer, http.StatusOK, post)
+}
+
 func main() {
 	// feed, err := rss.UrlToFeed("https://wagslane.dev/index.xml")
 	// if err != nil {
@@ -226,6 +238,8 @@ func main() {
 	router.GET("/feed_follows", apiCfg.middleWare(apiCfg.handlerGetFeedFollows))
 
 	router.DELETE("/feed_follows/:feedFollowID", apiCfg.middleWare(apiCfg.handlerDeleteFeedFollow))
+
+	router.GET("/posts", apiCfg.middleWare(apiCfg.handlerGetPostsForUser))
 
 	srv := &http.Server{
 		Handler:      router,
