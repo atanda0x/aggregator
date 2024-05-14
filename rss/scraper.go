@@ -2,11 +2,14 @@ package rss
 
 import (
 	"context"
+	"database/sql"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/atanda0x/aggregator/db/sqlc"
+	"github.com/google/uuid"
 )
 
 func StartScraping(db *sqlc.Queries, concurrency int, timeBetweenRequest time.Duration) {
@@ -45,8 +48,35 @@ func scrapeFeed(db *sqlc.Queries, wg *sync.WaitGroup, feed sqlc.Feed) {
 	}
 
 	for _, item := range rssFeed.Channel.Item {
-		log.Println("Found post", item.Title, "on feed", feed.Name)
+		description := sql.NullString{}
+		if item.Description != "" {
+			description.String = item.Description
+			description.Valid = true
+		}
+		pub, err := time.Parse(time.RFC1123Z, item.PubDate)
+		if err != nil {
+			log.Printf("Couldn't parse Date %v with err %v", item.PubDate, err)
+			continue
+		}
+
+		_, err = db.CreatePost(context.Background(), sqlc.CreatePostParams{
+			ID:          uuid.New(),
+			Title:       item.Title,
+			Description: description,
+			PublishedAt: pub,
+			Url:         item.Link,
+			FeedID:      feed.ID,
+			CreatedAt:   time.Now().UTC(),
+			UpdatedAt:   time.Now().UTC(),
+		})
+		if err != nil {
+			if strings.Contains(err.Error(), "duplicate key") {
+				continue
+			}
+			log.Println("failed to create post: ", err)
+		}
 	}
+
 	log.Printf("Feed %s collected, %v posts found", feed.Name, len(rssFeed.Channel.Item))
 
 }

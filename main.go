@@ -180,11 +180,11 @@ func (apiCfg *apiConfig) handlerDeleteFeedFollow(c *gin.Context, user sqlc.User)
 }
 
 func main() {
-	feed, err := rss.UrlToFeed("https://wagslane.dev/index.xml")
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(feed)
+	// feed, err := rss.UrlToFeed("https://wagslane.dev/index.xml")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Println(feed)
 
 	godotenv.Load(".env")
 
