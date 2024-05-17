@@ -29,8 +29,9 @@ Aggregator is a Go-based application designed to scrape RSS feeds and store the 
 2. **Load environment variables:**
     Create a `.env` file in the project root and set the following variables:
     ```sh
-    PORT=<your-port>
-    DB_URL=<your-database-url>
+    SERVER_ADDRESS=<your-port>
+    DB_DRIVER=<your-driver(postgres)>
+    DB_SOURCE=<your-database-url>
     ```
 
 3. **Install dependencies:**
